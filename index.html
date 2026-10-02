@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Countdown Begins</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --white: #ffffff;
+      --soft-white: rgba(255, 255, 255, 0.78);
+      --muted: rgba(255, 255, 255, 0.48);
+      --border: rgba(255, 255, 255, 0.13);
+    }
+    html, body { width: 100%; height: 100%; }
+    body {
+      overflow: hidden; background: #000; color: var(--white);
+      font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    }
+    .page {
+      position: relative; width: 100%; height: 100vh; min-height: 500px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.035), transparent 38%), #000;
+    }
+    .ambient {
+      position: absolute; width: 420px; height: 420px; border-radius: 50%;
+      background: rgba(255,255,255,0.025); filter: blur(90px); pointer-events: none;
+      animation: ambientPulse 7s ease-in-out infinite;
+    }
+    @keyframes ambientPulse { 0%,100% { transform: scale(.92); opacity: .35; } 50% { transform: scale(1.08); opacity: .65; } }
+    .stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .star {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; opacity: .3;
+      animation: twinkle var(--duration) ease-in-out infinite, drift var(--drift) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle { 0%,100% { opacity: .12; } 50% { opacity: .65; } }
+    @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-14px); } }
+
+    .content {
+      position: relative; z-index: 5; width: min(1000px, 92%); text-align: center;
+      display: flex; flex-direction: column; align-items: center; animation: contentIn 1.5s ease forwards;
+    }
+    @keyframes contentIn { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+    .eyebrow {
+      margin-bottom: 42px; font-family: "Playfair Display", serif; font-weight: 400;
+      font-size: clamp(11px, 1.1vw, 14px); letter-spacing: .38em; text-transform: uppercase; color: var(--soft-white);
+    }
+    .countdown { display: flex; align-items: center; justify-content: center; gap: clamp(15px, 3vw, 42px); width: 100%; }
+    .unit { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: clamp(80px, 12vw, 150px); }
+    .number {
+      font-family: "Playfair Display", serif; font-weight: 400; font-size: clamp(60px, 10vw, 132px);
+      line-height: .9; letter-spacing: -.055em; font-variant-numeric: tabular-nums; color: #fff;
+      text-shadow: 0 0 30px rgba(255,255,255,0.035);
+    }
+    .unit-label {
+      margin-top: 25px; font-family: "Playfair Display", serif; font-weight: 400;
+      font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: var(--muted);
+    }
+    .separator {
+      align-self: flex-start; margin-top: clamp(15px, 2vw, 28px); font-family: "Playfair Display", serif;
+      font-size: clamp(45px, 7vw, 90px); line-height: .8; color: rgba(255,255,255,0.42);
+      animation: separatorPulse 2s ease-in-out infinite;
+    }
+    @keyframes separatorPulse { 0%,100% { opacity: .35; } 50% { opacity: .8; } }
+    .subtitle {
+      margin-top: 55px; font-family: "Playfair Display", serif; font-weight: 400;
+      font-size: 12px; letter-spacing: .18em; color: rgba(255,255,255,0.55); text-transform: uppercase;
+    }
+    .countdown-section {
+      position: relative; padding: 42px 50px; border: 1px solid var(--border); border-radius: 28px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 100px rgba(0,0,0,0.55);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    }
+
+    /* FINISHED SCREEN: Happy Boyfriend Day */
+    .finished {
+      position: absolute; inset: 0; z-index: 20; padding: 24px;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;
+      opacity: 0; visibility: hidden; transform: scale(.97);
+      transition: opacity .8s ease, transform .8s ease, visibility .8s ease;
+      background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.045), transparent 45%), #000;
+    }
+    .finished.show { opacity: 1; visibility: visible; transform: scale(1); }
+    .finished .small {
+      font-family: "Playfair Display", serif; font-size: 12px; letter-spacing: .3em;
+      color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 26px;
+    }
+    .finished h1 {
+      font-family: "Playfair Display", serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px);
+      letter-spacing: -.04em; line-height: 1.05; color: #fff;
+    }
+    .finished .name {
+      margin-top: 18px; font-family: "Playfair Display", serif; font-style: italic;
+      font-size: clamp(26px, 4.5vw, 52px); color: var(--soft-white);
+    }
+    .finished .note {
+      margin-top: 34px; max-width: 520px; font-family: "Playfair Display", serif;
+      font-size: clamp(15px, 2vw, 19px); line-height: 1.8; color: rgba(255,255,255,0.62);
+    }
+    .finished .love {
+      margin-top: 30px; max-width: 92vw; font-family: "Playfair Display", serif; font-style: italic;
+      font-size: clamp(18px, 3vw, 30px); color: #fff; overflow-wrap: anywhere;
+    }
+    .heart {
+      position: fixed; bottom: -30px; font-size: 20px; z-index: 30; pointer-events: none;
+      animation: rise linear forwards;
+    }
+    @keyframes rise { to { transform: translateY(-110vh) rotate(25deg); opacity: 0; } }
+
+    @media (max-width: 600px) {
+      .ambient { width: 280px; height: 280px; filter: blur(70px); }
+      .countdown-section { width: 92%; padding: 38px 15px; border-radius: 22px; }
+      .eyebrow { margin-bottom: 35px; font-size: 10px; letter-spacing: .28em; }
+      .countdown { gap: 7px; }
+      .unit { min-width: 0; flex: 1; }
+      .number { font-size: clamp(42px, 14vw, 70px); letter-spacing: -.06em; }
+      .unit-label { margin-top: 17px; font-size: 8px; letter-spacing: .22em; }
+      .separator { margin-top: 10px; font-size: clamp(32px, 9vw, 50px); }
+      .subtitle { margin-top: 40px; font-size: 9px; letter-spacing: .13em; }
+      .finished .small { font-size: 9px; }
+    }
+    @media (max-width: 360px) {
+      .countdown-section { padding: 32px 10px; }
+      .number { font-size: 39px; }
+      .unit-label { font-size: 7px; }
+      .separator { font-size: 30px; }
+      .eyebrow { font-size: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .heart { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="ambient"></div>
+    <div class="stars" id="stars"></div>
+
+    <section class="content" id="countdownSection">
+      <div class="countdown-section">
+        <div class="eyebrow">The Countdown Begins</div>
+        <div class="countdown">
+          <div class="unit"><div class="number" id="hours">00</div><div class="unit-label">Hours</div></div>
+          <div class="separator">:</div>
+          <div class="unit"><div class="number" id="minutes">00</div><div class="unit-label">Minutes</div></div>
+          <div class="separator">:</div>
+          <div class="unit"><div class="number" id="seconds">00</div><div class="unit-label">Seconds</div></div>
+        </div>
+        <div class="subtitle">Until 3 October 2026</div>
+      </div>
+    </section>
+
+    <section class="finished" id="finished">
+      <div class="small">3 October 2026</div>
+      <h1>Happy Boyfriend Day 🖤</h1>
+      <div class="name">my piyare piyare Kuchu Puchu</div>
+      <p class="note">You make every ordinary day feel special.<br>Thank you for being you, and for being mine.</p>
+      <p class="love">Love you sooooooooooooooo muchhhhhhhhh 🖤🖤</p>
+    </section>
+  </main>
+
+  <script>
+    // Pakistan Standard Time (UTC+5)
+    const targetTime = new Date("2026-10-03T00:00:00+05:00").getTime();
+
+    const hoursElement = document.getElementById("hours");
+    const minutesElement = document.getElementById("minutes");
+    const secondsElement = document.getElementById("seconds");
+    const countdownSection = document.getElementById("countdownSection");
+    const finishedSection = document.getElementById("finished");
+    const starsContainer = document.getElementById("stars");
+
+    for (let i = 0; i < 90; i++) {
+      const star = document.createElement("span");
+      star.className = "star";
+      star.style.left = Math.random() * 100 + "%";
+      star.style.top = Math.random() * 100 + "%";
+      const size = Math.random() * 1.5 + 0.5;
+      star.style.width = size + "px";
+      star.style.height = size + "px";
+      star.style.opacity = Math.random() * 0.45 + 0.1;
+      star.style.setProperty("--duration", (Math.random() * 4 + 3) + "s");
+      star.style.setProperty("--drift", (Math.random() * 8 + 5) + "s");
+      star.style.animationDelay = (Math.random() * 5) + "s";
+      starsContainer.appendChild(star);
+    }
+
+    let countdownInterval = null;
+    let finished = false;
+
+    function pad(value) { return String(value).padStart(2, "0"); }
+
+    function startHearts() {
+      setInterval(() => {
+        const h = document.createElement("span");
+        h.className = "heart";
+        h.textContent = "🖤";
+        h.style.left = Math.random() * 100 + "vw";
+        h.style.animationDuration = (4 + Math.random() * 4) + "s";
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 8500);
+      }, 450);
+    }
+
+    function showFinished() {
+      if (finished) return;
+      finished = true;
+      hoursElement.textContent = "00";
+      minutesElement.textContent = "00";
+      secondsElement.textContent = "00";
+      if (countdownInterval !== null) { clearInterval(countdownInterval); countdownInterval = null; }
+      setTimeout(() => {
+        countdownSection.style.display = "none";
+        finishedSection.classList.add("show");
+        startHearts();
+      }, 700);
+    }
+
+    function updateCountdown() {
+      const difference = targetTime - Date.now();
+      if (difference <= 0) { showFinished(); return; }
+      // Hours = total remaining hours (days not shown)
+      const totalSeconds = Math.floor(difference / 1000);
+      hoursElement.textContent = pad(Math.floor(totalSeconds / 3600));
+      minutesElement.textContent = pad(Math.floor((totalSeconds % 3600) / 60));
+      secondsElement.textContent = pad(totalSeconds % 60);
+    }
+
+    updateCountdown();
+    if (!finished) countdownInterval = setInterval(updateCountdown, 1000);
+
+    // Testing: open index.html#preview to see the final message
+    if (location.hash === "#preview") showFinished();
+  </script>
+</body>
+</html>
