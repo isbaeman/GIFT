@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>The Countdown Begins</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,7 +76,7 @@
       backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     }
 
-    /* FINISHED SCREEN: Happy Boyfriend Day */
+    /* FINISHED SCREEN: Happy Boyfriend Day (typewriter sequence) */
     .finished {
       position: absolute; inset: 0; z-index: 20; padding: 24px;
       display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;
@@ -85,26 +85,46 @@
       background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.045), transparent 45%), #000;
     }
     .finished.show { opacity: 1; visibility: visible; transform: scale(1); }
+
+    .line { transition: opacity 1.4s ease, filter 1.4s ease, transform 1.4s ease; max-width: 100%; }
+    .line.out { opacity: 0; filter: blur(6px); transform: translateY(-8px); }
+    .w { display: inline-block; max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .c {
+      display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(.28em); white-space: pre;
+      transition: opacity .7s cubic-bezier(.3,.6,.3,1), filter .7s cubic-bezier(.3,.6,.3,1), transform .7s cubic-bezier(.2,.7,.2,1);
+    }
+    .c.on { opacity: 1; filter: blur(0); transform: none; }
+    .sp { display: inline-block; width: .28em; }
+
     .finished .small {
       font-family: "Playfair Display", serif; font-size: 12px; letter-spacing: .3em;
-      color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 26px;
+      color: rgba(255,255,255,0.5); text-transform: uppercase;
     }
-    .finished h1 {
+    .finished .big {
       font-family: "Playfair Display", serif; font-weight: 400; font-size: clamp(40px, 7vw, 88px);
       letter-spacing: -.04em; line-height: 1.05; color: #fff;
     }
     .finished .name {
-      margin-top: 18px; font-family: "Playfair Display", serif; font-style: italic;
+      font-family: "Playfair Display", serif; font-style: italic;
       font-size: clamp(26px, 4.5vw, 52px); color: var(--soft-white);
     }
     .finished .note {
-      margin-top: 34px; max-width: 520px; font-family: "Playfair Display", serif;
+      max-width: 520px; font-family: "Playfair Display", serif;
       font-size: clamp(15px, 2vw, 19px); line-height: 1.8; color: rgba(255,255,255,0.62);
     }
     .finished .love {
-      margin-top: 30px; max-width: 92vw; font-family: "Playfair Display", serif; font-style: italic;
+      max-width: 92vw; font-family: "Playfair Display", serif; font-style: italic;
       font-size: clamp(18px, 3vw, 30px); color: #fff; overflow-wrap: anywhere;
     }
+    .again {
+      margin-top: 38px; background: none; border: 1px solid rgba(255,255,255,0.5); color: rgba(255,255,255,0.78);
+      font: italic 15px "Playfair Display", serif; padding: 9px 22px; border-radius: 999px; cursor: pointer;
+      opacity: 0; transition: opacity 1.5s, background .3s, color .3s;
+    }
+    .again.in { opacity: 1; }
+    .again:hover { background: #fff; color: #000; }
+    .again:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
     .heart {
       position: fixed; bottom: -30px; font-size: 20px; z-index: 30; pointer-events: none;
       animation: rise linear forwards;
@@ -155,13 +175,7 @@
       </div>
     </section>
 
-    <section class="finished" id="finished">
-      <div class="small">3 October 2026</div>
-      <h1>Happy Boyfriend Day 🖤</h1>
-      <div class="name">my piyare piyare Kuchu Puchu</div>
-      <p class="note">You make every ordinary day feel special.<br>Thank you for being you, and for being mine.</p>
-      <p class="love">Love you sooooooooooooooo muchhhhhhhhh 🖤🖤</p>
-    </section>
+    <section class="finished" id="finished" aria-live="polite"></section>
   </main>
 
   <script>
@@ -195,16 +209,93 @@
 
     function pad(value) { return String(value).padStart(2, "0"); }
 
+    // ---- Typewriter sequence for the finished screen ----
+    const SEQ = [
+      ["small", "3 October 2026"],
+      ["big",   "Happy Boyfriend Day 🖤"],
+      ["name",  "my piyare piyare Kuchu Puchu"],
+      ["note",  "You make every ordinary day feel special."],
+      ["note",  "Thank you for being you,"],
+      ["note",  "and for being mine."],
+      ["love",  "Love you sooooooooooooooo muchhhhhhhhh 🖤🖤"]
+    ];
+    const CHAR_MS = 75, HOLD = 2400, FADE_OUT = 1400, GAP = 2000;
+    let timers = [], heartTimer = null;
+
+    function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+    function heartOnce() {
+      const h = document.createElement("span");
+      h.className = "heart";
+      h.textContent = "🖤";
+      h.style.left = Math.random() * 100 + "vw";
+      h.style.animationDuration = (4 + Math.random() * 4) + "s";
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 8500);
+    }
+
     function startHearts() {
-      setInterval(() => {
-        const h = document.createElement("span");
-        h.className = "heart";
-        h.textContent = "🖤";
-        h.style.left = Math.random() * 100 + "vw";
-        h.style.animationDuration = (4 + Math.random() * 4) + "s";
-        document.body.appendChild(h);
-        setTimeout(() => h.remove(), 8500);
-      }, 450);
+      for (let i = 0; i < 12; i++) later(heartOnce, i * 90);
+      heartTimer = setInterval(heartOnce, 450);
+    }
+
+    function build(text, el) {
+      const chars = [];
+      const words = text.split(" ");
+      words.forEach((word, wi) => {
+        const w = document.createElement("span");
+        w.className = "w";
+        Array.from(word).forEach(ch => {
+          const c = document.createElement("span");
+          c.className = "c";
+          c.textContent = ch;
+          w.appendChild(c);
+          chars.push(c);
+        });
+        el.appendChild(w);
+        if (wi < words.length - 1) {
+          const sp = document.createElement("span");
+          sp.className = "sp";
+          el.appendChild(sp);
+        }
+      });
+      return chars;
+    }
+
+    function run(i) {
+      const el = document.createElement("div");
+      el.className = "line " + SEQ[i][0];
+      el.setAttribute("aria-label", SEQ[i][1]);
+      const chars = build(SEQ[i][1], el);
+      finishedSection.appendChild(el);
+      void el.offsetWidth;
+      chars.forEach((c, k) => later(() => c.classList.add("on"), 300 + k * CHAR_MS));
+      const typed = 300 + chars.length * CHAR_MS + 700;
+
+      if (i === SEQ.length - 1) {
+        later(() => {
+          const b = document.createElement("button");
+          b.className = "again";
+          b.textContent = "Read it again";
+          b.addEventListener("click", restart);
+          finishedSection.appendChild(b);
+          void b.offsetWidth;
+          later(() => b.classList.add("in"), 60);
+          startHearts();
+        }, typed + 500);
+        return;
+      }
+      later(() => el.classList.add("out"), typed + HOLD);
+      later(() => el.remove(), typed + HOLD + FADE_OUT);
+      later(() => run(i + 1), typed + HOLD + FADE_OUT + GAP);
+    }
+
+    function restart() {
+      timers.forEach(clearTimeout);
+      timers = [];
+      clearInterval(heartTimer);
+      finishedSection.innerHTML = "";
+      later(() => run(0), 800);
     }
 
     function showFinished() {
@@ -217,7 +308,7 @@
       setTimeout(() => {
         countdownSection.style.display = "none";
         finishedSection.classList.add("show");
-        startHearts();
+        later(() => run(0), 800);
       }, 700);
     }
 
